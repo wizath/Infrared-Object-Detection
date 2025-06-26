@@ -63,14 +63,14 @@ def select_device(device='', batch_size=0, newline=True):
 
     cuda = not cpu and torch.cuda.is_available()
     if cuda:
-        devices = device.split(',') if device else '0'  # range(torch.cuda.device_count())  # i.e. 0,1,6,7
+        devices = device.split(',') if device else '0'  # range(torch.cuda.device_count())  # i.e. 0,1,2,3
         n = len(devices)  # device count
-        if n > 1 and batch_size > 0:  # check batch_size is divisible by device_count
+        if n > 1 and batch_size > 0:  # check batch_size is compatible with device count
             assert batch_size % n == 0, f'batch-size {batch_size} not multiple of GPU count {n}'
-        space = ' ' * (len(s) + 1)
+        space = ' ' * len(s)
         for i, d in enumerate(devices):
             p = torch.cuda.get_device_properties(i)
-            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / (1 << 20):.0f}MiB)\n"  # bytes to MB
+            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / 1024 ** 2}MB)\n"  # i.e. "CUDA:0 (A100, 40960MB)\n"
     else:
         s += 'CPU\n'
 
