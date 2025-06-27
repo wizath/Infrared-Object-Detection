@@ -49,7 +49,7 @@ from utils.downloads import attempt_download
 from utils.general import (LOGGER, check_dataset, check_file, check_git_status, check_img_size, check_requirements,
                            check_suffix, check_yaml, colorstr, get_latest_run, increment_path, init_seeds,
                            intersect_dicts, labels_to_class_weights, labels_to_image_weights, methods, one_cycle,
-                           print_args, print_mutation, strip_optimizer)
+                           print_args, print_mutation, set_logging, strip_optimizer)
 from utils.loggers import Loggers
 from utils.loggers.wandb.wandb_utils import check_wandb_resume
 from utils.loss import ComputeLoss
@@ -506,6 +506,7 @@ def parse_opt(known=False):
     parser.add_argument('--freeze', nargs='+', type=int, default=[0], help='Freeze layers: backbone=10, first3=0 1 2')
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
     parser.add_argument('--local_rank', type=int, default=-1, help='DDP parameter, do not modify')
+    parser.add_argument('--logfile', type=str, default='', help='path to log file (logs to console only if empty)')
 
     # Weights & Biases arguments
     parser.add_argument('--entity', default=None, help='W&B: Entity')
@@ -518,6 +519,18 @@ def parse_opt(known=False):
 
 
 def main(opt, callbacks=Callbacks()):
+    # Setup logging
+    if opt.logfile:
+        # Create log file path relative to save directory
+        if not os.path.isabs(opt.logfile):
+            save_dir = increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok)
+            log_file = save_dir / opt.logfile
+        else:
+            log_file = opt.logfile
+        set_logging(log_file=log_file)
+        if RANK in (-1, 0):
+            LOGGER.info(f'Logging to file: {log_file}')
+    
     # Checks
     if RANK in (-1, 0):
         print_args(vars(opt))

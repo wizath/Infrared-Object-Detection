@@ -1,0 +1,27 @@
+# YOLO11 Infrared Dataset Configuration
+# Dataset path (relative to this file)
+path: datasets/infrared
+
+# Train/val/test sets as 1) directory: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+train: images/train
+val: images/val
+test: images/val  # Use validation set as test if no separate test set
+
+# Number of classes
+nc: 3
+
+# Class names (based on your infrared object detection dataset)
+names:
+  0: person
+  1: bicycle
+  2: car
+
+# Optional: Download script/URL (if dataset needs to be downloaded)
+# download: |
+#   # Download dataset if needed
+#   echo "Dataset should be in datasets/infrared/"
+
+# Optional: Dataset info
+description: "Infrared object detection dataset for person, bicycle, and car detection"
+version: "1.0"
+year: 2024 

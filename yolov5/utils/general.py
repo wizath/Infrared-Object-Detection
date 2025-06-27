@@ -76,7 +76,7 @@ def is_writeable(dir, test=False):
         return os.access(dir, os.R_OK)  # possible issues on Windows
 
 
-def set_logging(name=None, verbose=VERBOSE):
+def set_logging(name=None, verbose=VERBOSE, log_file=None):
     # Sets level and returns logger
     if is_kaggle():
         for h in logging.root.handlers:
@@ -85,10 +85,21 @@ def set_logging(name=None, verbose=VERBOSE):
     level = logging.INFO if (verbose and rank in (-1, 0)) else logging.WARNING
     log = logging.getLogger(name)
     log.setLevel(level)
+    
+    # Console handler
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("%(message)s"))
     handler.setLevel(level)
     log.addHandler(handler)
+    
+    # File handler (if log_file is specified)
+    if log_file and rank in (-1, 0):  # only log to file on main process
+        log_file = Path(log_file)
+        log_file.parent.mkdir(parents=True, exist_ok=True)  # create directory if needed
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+        file_handler.setLevel(level)
+        log.addHandler(file_handler)
 
 
 set_logging()  # run before defining LOGGER
@@ -834,7 +845,7 @@ def non_max_suppression(prediction,
 
 def strip_optimizer(f='best.pt', s=''):  # from utils.general import *; strip_optimizer()
     # Strip optimizer from 'f' to finalize training, optionally save as 's'
-    x = torch.load(f, map_location=torch.device('cpu'))
+    x = torch.load(f, map_location=torch.device('cpu'), weights_only=False)
     if x.get('ema'):
         x['model'] = x['ema']  # replace model with ema
     for k in 'optimizer', 'best_fitness', 'wandb_id', 'ema', 'updates':  # keys
